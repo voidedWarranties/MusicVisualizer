@@ -109,7 +109,6 @@ namespace MusicVisualizer.Game.UI
         {
             Colors = colors;
 
-            // TODO: Possibly causes inconsistent crashes, investigate
             if (fadeColor)
             {
                 foreach (var t in triangles)
