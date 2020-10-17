@@ -63,7 +63,7 @@ namespace MusicVisualizer.Game.UI.Visualisers
             var color = Colors[rng.Next(Colors.Length)];
             var offset = (float)(rng.NextDouble() * 2 * Math.PI);
 
-            if (deltaFiltered.Count > 5 && projectiles.Count < 250)
+            if (deltaFiltered.Count > 50)
             {
                 var avg = deltaFiltered.Sum() / deltaFiltered.Count;
                 var sides = (int)Math.Floor((double)8 * deltaFiltered.Count / vis.Delta.Length) + 3;
@@ -76,7 +76,7 @@ namespace MusicVisualizer.Game.UI.Visualisers
                     createSprite(origin, angle, velocity, color);
                 }
             }
-            else if (projectiles.Count < 250)
+            else if (deltaFiltered.Count < 10)
             {
                 for (var i = 0; i < vis.Delta.Length * 0.75; i++)
                 {

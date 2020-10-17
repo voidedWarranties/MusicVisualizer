@@ -29,6 +29,7 @@ using System.IO;
 using FFMpegCore.Pipes;
 using FFMpegCore;
 using FFMpegCore.Arguments;
+using osu.Framework.Timing;
 
 namespace MusicVisualizer.Game.UI
 {
@@ -50,6 +51,8 @@ namespace MusicVisualizer.Game.UI
         private string videoFile;
 
         private GameHost host;
+
+        private StopwatchClock clock;
 
         public BackgroundVideo()
         {
@@ -228,6 +231,10 @@ namespace MusicVisualizer.Game.UI
         {
             base.Update();
 
+            var track = Track.Value;
+
+            if (track == null) return;
+
             if (video != null && Math.Abs(video.Time.Current - Track.Value.CurrentTime) > 500)
             {
                 video.Seek(Track.Value.CurrentTime);
@@ -238,6 +245,15 @@ namespace MusicVisualizer.Game.UI
                 UpdateColors();
 
                 lastColorChange = Clock.CurrentTime;
+            }
+
+            if (track.IsRunning && !clock.IsRunning)
+            {
+                clock.Start();
+            }
+            else if (!track.IsRunning && clock.IsRunning)
+            {
+                clock.Stop();
             }
         }
 
@@ -259,7 +275,8 @@ namespace MusicVisualizer.Game.UI
                         RelativeSizeAxes = Axes.Both,
                         FillMode = FillMode.Fill,
                         Anchor = Anchor.Centre,
-                        Origin = Anchor.Centre
+                        Origin = Anchor.Centre,
+                        Clock = new FramedClock(clock = new StopwatchClock())
                     };
 
                     UpdateColors(true);

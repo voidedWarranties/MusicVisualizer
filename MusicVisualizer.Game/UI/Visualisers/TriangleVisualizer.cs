@@ -17,7 +17,7 @@ namespace MusicVisualizer.Game.UI
         [Resolved]
         private BackgroundVideo video { get; set; }
 
-        private int targetTriangles => (int)DrawWidth / 4;
+        private int targetTriangles => (int)DrawWidth / 6;
 
         private readonly List<Triangle> triangles = new List<Triangle>();
 

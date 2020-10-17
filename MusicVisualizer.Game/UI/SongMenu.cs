@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using MusicVisualizer.Game.IO;
 using osu.Framework.Allocation;
+using osu.Framework.Audio.Track;
+using osu.Framework.Bindables;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
@@ -13,6 +15,8 @@ namespace MusicVisualizer.Game
 {
     public class SongMenu : Menu
     {
+        public Action PlayPause { get; set; }
+
         public Action<SongConfig> PlayFile;
 
         private List<MenuItem> songSubmenuItems;
@@ -29,6 +33,7 @@ namespace MusicVisualizer.Game
             Items = new MenuItem[]
             {
                 new MenuItem("Open Folder", () => host.OpenFileExternally(store.Storage.GetFullPath("."))),
+                new MenuItem("Play/Pause", PlayPause),
                 new MenuItem("Songs")
                 {
                     Items = songSubmenuItems = new List<MenuItem>()

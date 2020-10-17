@@ -79,6 +79,16 @@ namespace MusicVisualizer.Game
                 {
                     Anchor = Anchor.TopLeft,
                     Origin = Anchor.TopLeft,
+                    PlayPause = () =>
+                    {
+                        var t = track.Value;
+                        if (t == null) return;
+
+                        if (t.IsRunning)
+                            t.Stop();
+                        else
+                            t.Start();
+                    },
                     PlayFile = file =>
                     {
                         config.Value = file;
