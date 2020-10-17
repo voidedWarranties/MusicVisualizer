@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "MusicVisualizer.sln",
+    "projects": [
+      "MusicVisualizer.Game\\MusicVisualizer.Game.csproj",
+      "MusicVisualizer.Resources\\MusicVisualizer.Resources.csproj",
+      "MusicVisualizer.iOS\\MusicVisualizer.iOS.csproj"
+    ]
+  }
+}
