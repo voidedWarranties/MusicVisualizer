@@ -1,6 +1,6 @@
 using MusicVisualizer.Game.IO;
 using MusicVisualizer.Game.UI;
-using MusicVisualizer.Game.UI.Visualisers;
+using MusicVisualizer.Game.UI.Visualizers;
 using osu.Framework.Allocation;
 using osu.Framework.Audio.Track;
 using osu.Framework.Bindables;
@@ -17,9 +17,9 @@ namespace MusicVisualizer.Game
 
         private BackgroundVideo backgroundVideo;
 
-        private Bindable<SongConfig> config = new Bindable<SongConfig>();
+        private readonly Bindable<SongConfig> config = new Bindable<SongConfig>();
 
-        private Bindable<Track> track = new Bindable<Track>();
+        private readonly Bindable<Track> track = new Bindable<Track>();
 
         private DependencyContainer dependencies;
 
@@ -46,7 +46,7 @@ namespace MusicVisualizer.Game
                 new Box
                 {
                     Colour = Color4.Black,
-                    RelativeSizeAxes = Axes.Both,
+                    RelativeSizeAxes = Axes.Both
                 },
                 new VisualizerContainer
                 {
@@ -55,7 +55,7 @@ namespace MusicVisualizer.Game
                     Children = new Drawable[]
                     {
                         backgroundVideo,
-                         new TriangleVisualizer
+                        new TriangleVisualizer
                         {
                             RelativeSizeAxes = Axes.Both,
                             Anchor = Anchor.Centre,
@@ -75,7 +75,7 @@ namespace MusicVisualizer.Game
                         }
                     }
                 },
-                songMenu = new SongMenu (Direction.Vertical)
+                songMenu = new SongMenu(Direction.Vertical)
                 {
                     Anchor = Anchor.TopLeft,
                     Origin = Anchor.TopLeft,

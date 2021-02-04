@@ -30,6 +30,7 @@ namespace MusicVisualizer.Game.IO
         {
             var inis = new List<SongConfig>();
             var directories = Storage.GetDirectories(".");
+
             foreach (var directory in directories)
             {
                 var files = Storage.GetFiles(directory);

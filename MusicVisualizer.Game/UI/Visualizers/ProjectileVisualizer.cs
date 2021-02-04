@@ -8,7 +8,7 @@ using osu.Framework.Graphics.Shapes;
 using osuTK;
 using osuTK.Graphics;
 
-namespace MusicVisualizer.Game.UI.Visualisers
+namespace MusicVisualizer.Game.UI.Visualizers
 {
     public class ProjectileVisualizer : Container
     {
@@ -20,12 +20,12 @@ namespace MusicVisualizer.Game.UI.Visualisers
 
         private readonly Random rng = new Random();
 
-        public Color4[] Colors = new Color4[]
+        public Color4[] Colors =
         {
             Color4.White
         };
 
-        private List<Projectile> projectiles = new List<Projectile>();
+        private readonly List<Projectile> projectiles = new List<Projectile>();
 
         private void createSprite(Vector2 pos, Vector2 direction, float velocity, Color4 color, float gravity = 0)
         {
@@ -36,7 +36,7 @@ namespace MusicVisualizer.Game.UI.Visualisers
                 Velocity = velocity,
                 Gravity = gravity,
                 Colour = color,
-                Size = new Vector2(10)
+                Size = new Vector2(12)
             };
 
             Add(circle);
@@ -93,7 +93,7 @@ namespace MusicVisualizer.Game.UI.Visualisers
                 }
             }
 
-            float clockFactor = (float)Clock.ElapsedFrameTime / (1000 / 60);
+            float clockFactor = (float)Clock.ElapsedFrameTime / (1000 / 60f);
 
             foreach (var p in projectiles)
             {
@@ -106,13 +106,7 @@ namespace MusicVisualizer.Game.UI.Visualisers
 
                 if (p.Velocity < 5 && !p.IsRemoving)
                 {
-                    p.FadeOut(750, Easing.OutQuad).OnComplete(p =>
-                    {
-                        projectiles.Remove(p);
-                        Remove(p);
-
-                        p.Dispose();
-                    });
+                    p.FadeOut(750, Easing.OutQuad).Expire();
 
                     p.IsRemoving = true;
                 }
@@ -122,6 +116,7 @@ namespace MusicVisualizer.Game.UI.Visualisers
         private IEnumerable<Vector2> getPolygonPoints(int sides)
         {
             var points = new List<Vector2>();
+
             for (float deg = 0; Math.Round(deg) < 360; deg += 360f / sides)
             {
                 float angle = (float)(deg * Math.PI / 180);
@@ -137,7 +132,7 @@ namespace MusicVisualizer.Game.UI.Visualisers
             var points = getPolygonPoints(sides).ToArray();
 
             var sideLen = Vector2Extensions.Distance(points[0], points[1]);
-            var space = sideLen / (projectiles / sides);
+            var space = sideLen / ((float)projectiles / sides);
 
             for (var i = 0; i < points.Length; i++)
             {

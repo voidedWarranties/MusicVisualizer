@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -15,7 +16,6 @@ using osu.Framework.Logging;
 using osuTK;
 using osuTK.Graphics;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.ColorSpaces;
 using SixLabors.ImageSharp.ColorSpaces.Conversion;
 using SixLabors.ImageSharp.PixelFormats;
@@ -29,6 +29,7 @@ using System.IO;
 using FFMpegCore.Pipes;
 using FFMpegCore;
 using FFMpegCore.Arguments;
+using MusicVisualizer.Game.UI.Visualizers;
 using osu.Framework.Timing;
 
 namespace MusicVisualizer.Game.UI
@@ -60,22 +61,11 @@ namespace MusicVisualizer.Game.UI
             BlurSigma = new Vector2(2);
         }
 
-        private IEnumerable<Hsv> getSimilarColors(Hsv color, IEnumerable<Hsv> colors)
-        {
-            var result = new List<Hsv>();
-
-            foreach (var compare in colors)
-            {
-                if (compare == color) continue;
-
-                if (Math.Abs(color.H - compare.H) < 12 && Math.Abs(color.S - compare.S) < 0.1 && Math.Abs(color.V - compare.V) < 0.1)
-                {
-                    result.Add(compare);
-                }
-            }
-
-            return result;
-        }
+        private IEnumerable<Hsv> getSimilarColors(Hsv color, IEnumerable<Hsv> colors) => colors.Where(c =>
+            c != color &&
+            Math.Abs(color.H - c.H) < 12 &&
+            Math.Abs(color.S - c.S) < 0.1 &&
+            Math.Abs(color.V - c.V) < 0.1);
 
         private Hsv avgHsv(IEnumerable<Hsv> colors)
         {
@@ -97,7 +87,10 @@ namespace MusicVisualizer.Game.UI
                 var fbo = new FrameBuffer();
                 fbo.Bind();
                 GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget2d.Texture2D, sharedData.MainBuffer.Texture.TextureId, 0);
-                GL.ReadPixels(0, 0, (int)DrawWidth, (int)DrawHeight, PixelFormat.Rgba, PixelType.UnsignedByte, ref MemoryMarshal.GetReference(image.GetPixelSpan()));
+
+                bool success = image.TryGetSinglePixelSpan(out var span);
+                Debug.Assert(success);
+                GL.ReadPixels(0, 0, (int)DrawWidth, (int)DrawHeight, PixelFormat.Rgba, PixelType.UnsignedByte, ref MemoryMarshal.GetReference(span));
                 fbo.Dispose();
                 GLWrapper.BindFrameBuffer(GLWrapper.DefaultFrameBuffer);
 
@@ -113,12 +106,12 @@ namespace MusicVisualizer.Game.UI
                 Logger.Log($"OpenGL frame query took {Clock.CurrentTime - sent}ms", LoggingTarget.Performance);
                 Task.Run(() =>
                 {
-                    image.Mutate(c => c.Resize(new ResizeOptions
-                    {
-                        Size = new SixLabors.Primitives.Size(64)
-                    }));
+                    image.Mutate(x => x.Resize(64, 64));
 
-                    var distinct = image.GetPixelSpan().ToArray().Distinct();
+                    bool success = image.TryGetSinglePixelSpan(out var span);
+                    Debug.Assert(success);
+
+                    var distinct = span.ToArray().Distinct();
                     Span<Hsv> hsv = new Span<Hsv>(new Hsv[distinct.Count()]);
                     var colors = new ReadOnlySpan<Rgb>(distinct.Select(c => new Rgb(c.R / 255f, c.G / 255f, c.B / 255f)).ToArray());
                     new ColorSpaceConverter().Convert(colors, hsv);
@@ -132,10 +125,7 @@ namespace MusicVisualizer.Game.UI
 
                         var sim = getSimilarColors(color, hsv.ToArray());
 
-                        if (sim.Count() > 0)
-                            result.Add(avgHsv(sim));
-                        else
-                            result.Add(color);
+                        result.Add(sim.Any() ? avgHsv(sim) : color);
 
                         searched.AddRange(sim);
                     }
@@ -159,18 +149,22 @@ namespace MusicVisualizer.Game.UI
                 var path = store.Storage.GetFullPath(videoFile);
 
                 FFMpegArguments
-                    .FromSeekedFiles((path, new TimeSpan(0, 0, 0, 0, time)))
-                    .WithFrameOutputCount(1)
-                    .WithArgument(new CustomArgument("-s 16x16"))
-                    .ForceFormat("image2")
-                    .OutputToPipe(sink)
+                    .FromFileInput(path, true, opt =>
+                        opt.Seek(new TimeSpan(0, 0, 0, 0, time)))
+                    .OutputToPipe(sink, opt =>
+                        opt.WithFrameOutputCount(1)
+                           .WithArgument(new CustomArgument("-s 16x16"))
+                           .ForceFormat("image2"))
                     .ProcessSynchronously();
 
                 stream.Seek(0, SeekOrigin.Begin);
 
                 using (Image<Rgb24> image = SixLabors.ImageSharp.Image.Load<Rgb24>(stream))
                 {
-                    var distinct = image.GetPixelSpan().ToArray().Distinct();
+                    var success = image.TryGetSinglePixelSpan(out var span);
+                    Debug.Assert(success);
+
+                    var distinct = span.ToArray().Distinct();
                     Span<Hsv> hsv = new Span<Hsv>(new Hsv[distinct.Count()]);
                     var colors = new ReadOnlySpan<Rgb>(distinct.Select(c => new Rgb(c.R / 255f, c.G / 255f, c.B / 255f)).ToArray());
                     new ColorSpaceConverter().Convert(colors, hsv);
@@ -184,10 +178,7 @@ namespace MusicVisualizer.Game.UI
 
                         var sim = getSimilarColors(color, hsv.ToArray());
 
-                        if (sim.Count() > 0)
-                            result.Add(avgHsv(sim));
-                        else
-                            result.Add(color);
+                        result.Add(sim.Any() ? avgHsv(sim) : color);
 
                         searched.AddRange(sim);
                     }
@@ -197,11 +188,12 @@ namespace MusicVisualizer.Game.UI
             });
         }
 
-        private double lastColorChange = 0;
+        private double lastColorChange;
 
         public void UpdateColors(bool ffMpeg = false)
         {
             var sent = Clock.CurrentTime;
+
             if (ffMpeg)
             {
                 GetColors(colors =>
@@ -233,7 +225,7 @@ namespace MusicVisualizer.Game.UI
 
             var track = Track.Value;
 
-            if (track == null) return;
+            if (track == null || video == null) return;
 
             if (video != null && Math.Abs(video.Time.Current - Track.Value.CurrentTime) > 500)
             {
@@ -296,7 +288,7 @@ namespace MusicVisualizer.Game.UI
         {
             public Color4[] Colors { get; set; }
 
-            public bool Initial { get; set; } = false;
+            public bool Initial { get; set; }
         }
     }
 }

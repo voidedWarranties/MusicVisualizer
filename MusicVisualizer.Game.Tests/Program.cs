@@ -7,7 +7,7 @@ namespace MusicVisualizer.Game.Tests
     {
         public static void Main()
         {
-            using (GameHost host = Host.GetSuitableHost("visual-tests"))
+            using (GameHost host = Host.GetSuitableHost("MusicVisualizer"))
             using (var game = new MusicVisualizerTestBrowser())
                 host.Run(game);
         }

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using MusicVisualizer.Game.IO;
 using osu.Framework.Allocation;
-using osu.Framework.Audio.Track;
-using osu.Framework.Bindables;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
@@ -11,7 +9,7 @@ using osu.Framework.Graphics.Sprites;
 using osu.Framework.Graphics.UserInterface;
 using osu.Framework.Platform;
 
-namespace MusicVisualizer.Game
+namespace MusicVisualizer.Game.UI
 {
     public class SongMenu : Menu
     {
@@ -30,7 +28,7 @@ namespace MusicVisualizer.Game
         [BackgroundDependencyLoader]
         private void load(GameHost host, FileStore store)
         {
-            Items = new MenuItem[]
+            Items = new[]
             {
                 new MenuItem("Open Folder", () => host.OpenFileExternally(store.Storage.GetFullPath("."))),
                 new MenuItem("Play/Pause", PlayPause),

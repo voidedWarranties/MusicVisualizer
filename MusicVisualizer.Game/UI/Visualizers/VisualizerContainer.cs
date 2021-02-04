@@ -6,7 +6,7 @@ using osu.Framework.Audio.Track;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Containers;
 
-namespace MusicVisualizer.Game.UI
+namespace MusicVisualizer.Game.UI.Visualizers
 {
     [Cached]
     public class VisualizerContainer : Container
@@ -23,11 +23,11 @@ namespace MusicVisualizer.Game.UI
 
         private float[] prevAmplitudes = new float[size];
 
-        public float Activity = 0.0f;
+        public float Activity;
 
-        public float ActivityDelta = 0;
+        public float ActivityDelta;
 
-        private List<float> activeHistory = new List<float>();
+        private readonly List<float> activeHistory = new List<float>();
 
         public float[] Delta = new float[size];
 
@@ -45,9 +45,9 @@ namespace MusicVisualizer.Game.UI
                 SmoothedAmplitudes[i] = smoothing * prevAmplitudes[i] + (1 - smoothing) * TemporalAmplitudes[i];
 
             Activity = 0.0f;
-            int num2 = 64;
-            for (int i = 0; i < num2; i++)
-                Activity += 2f * TemporalAmplitudes[i] * (num2 - i) / num2;
+            const int end = 64;
+            for (int i = 0; i < end; i++)
+                Activity += 2f * TemporalAmplitudes[i] * (end - i) / end;
 
             activeHistory.Add(Activity);
             if (activeHistory.Count > 16) activeHistory.RemoveAt(0);

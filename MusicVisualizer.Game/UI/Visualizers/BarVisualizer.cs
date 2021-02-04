@@ -3,34 +3,20 @@ using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.OpenGL.Vertices;
 using osu.Framework.Graphics.Primitives;
-using osu.Framework.Graphics.Shaders;
 using osu.Framework.Graphics.Textures;
 using osuTK;
 using osuTK.Graphics;
 
-namespace MusicVisualizer.Game.UI
+namespace MusicVisualizer.Game.UI.Visualizers
 {
     public class BarVisualizer : Drawable
     {
-        private IShader shader;
-
         [Resolved]
         private VisualizerContainer vis { get; set; }
 
-        protected override void Update()
-        {
-            base.Update();
-        }
+        protected override DrawNode CreateDrawNode() => new DebugVisualizerDrawNode(this);
 
-        [BackgroundDependencyLoader]
-        private void load(ShaderManager shaders)
-        {
-            shader = shaders.Load(VertexShaderDescriptor.TEXTURE_2, FragmentShaderDescriptor.TEXTURE);
-        }
-
-        protected override DrawNode CreateDrawNode() => new DebugVisualiserDrawNode(this);
-
-        private class DebugVisualiserDrawNode : DrawNode
+        private class DebugVisualizerDrawNode : DrawNode
         {
             protected new BarVisualizer Source => (BarVisualizer)base.Source;
 
@@ -38,9 +24,7 @@ namespace MusicVisualizer.Game.UI
 
             private Vector2 size;
 
-            private IShader shader;
-
-            public DebugVisualiserDrawNode(BarVisualizer source)
+            public DebugVisualizerDrawNode(IDrawable source)
                 : base(source)
             {
             }
@@ -50,15 +34,12 @@ namespace MusicVisualizer.Game.UI
                 base.ApplyState();
 
                 audioData = Source.vis.SmoothedAmplitudes;
-                size = Source.ToScreenSpace(Source.DrawSize);
-                shader = Source.shader;
+                size = Source.ScreenSpaceDrawQuad.Size;
             }
 
             public override void Draw(Action<TexturedVertex2D> vertexAction)
             {
                 base.Draw(vertexAction);
-
-                shader.Bind();
 
                 float width = size.X / audioData.Length / 2;
 
@@ -70,8 +51,6 @@ namespace MusicVisualizer.Game.UI
 
                     DrawQuad(Texture.WhitePixel, rectangle, new Color4(255, 255, 255, 200));
                 }
-
-                shader.Unbind();
             }
         }
     }

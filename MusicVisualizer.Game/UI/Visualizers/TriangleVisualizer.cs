@@ -7,7 +7,7 @@ using osu.Framework.Graphics.Shapes;
 using osuTK;
 using osuTK.Graphics;
 
-namespace MusicVisualizer.Game.UI
+namespace MusicVisualizer.Game.UI.Visualizers
 {
     public class TriangleVisualizer : Container
     {
@@ -23,11 +23,11 @@ namespace MusicVisualizer.Game.UI
 
         private readonly Random rng = new Random();
 
-        private int baseVelocity = 1;
+        private const int base_velocity = 1;
 
-        private float velocity = 0;
+        private float velocity;
 
-        public Color4[] Colors = new Color4[]
+        public Color4[] Colors =
         {
             Color4.White
         };
@@ -65,7 +65,7 @@ namespace MusicVisualizer.Game.UI
                 return;
             }
 
-            var size = rng.Next(25, 150);
+            var size = rng.Next(25, 200);
 
             t.Size = new Vector2(size);
             t.Anchor = Anchor.TopLeft;
@@ -84,13 +84,13 @@ namespace MusicVisualizer.Game.UI
         {
             base.Update();
 
-            float clockFactor = (float)Clock.ElapsedFrameTime / (1000 / 60);
+            float clockFactor = (float)Clock.ElapsedFrameTime / (1000 / 60f);
 
-            velocity = Math.Max(velocity, (float)Math.Min(vis.Activity * 3, 15));
+            velocity = Math.Max(velocity, Math.Min(vis.Activity * 3, 15));
 
             velocity -= velocity * 0.05f * clockFactor;
 
-            float num = (float)((baseVelocity + velocity) * clockFactor * 0.5);
+            float num = (float)((base_velocity + velocity) * clockFactor * 0.5);
 
             for (int i = 0; i < triangles.Count; i++)
             {
