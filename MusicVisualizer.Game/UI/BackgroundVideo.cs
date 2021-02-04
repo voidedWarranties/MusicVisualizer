@@ -67,6 +67,25 @@ namespace MusicVisualizer.Game.UI
             Math.Abs(color.S - c.S) < 0.1 &&
             Math.Abs(color.V - c.V) < 0.1);
 
+        private IEnumerable<Hsv> reduceColors(IEnumerable<Hsv> colors)
+        {
+            var searched = new List<Hsv>();
+            var result = new List<Hsv>();
+
+            foreach (var color in colors)
+            {
+                if (searched.Contains(color)) continue;
+
+                var sim = getSimilarColors(color, colors);
+
+                result.Add(sim.Any() ? avgHsv(sim) : color);
+
+                searched.AddRange(sim);
+            }
+
+            return result;
+        }
+
         private Hsv avgHsv(IEnumerable<Hsv> colors)
         {
             var h = colors.Select(c => c.H).Sum() / colors.Count();
@@ -74,6 +93,23 @@ namespace MusicVisualizer.Game.UI
             var v = colors.Select(c => c.V).Sum() / colors.Count();
 
             return new Hsv(h, s, v);
+        }
+
+        private Color4[] getImageColors<T>(Image<T> image)
+            where T : unmanaged, IPixel<T>
+        {
+            var rgba = image.CloneAs<Rgba32>();
+
+            bool success = rgba.TryGetSinglePixelSpan(out var span);
+            Debug.Assert(success);
+
+            var distinct = span.ToArray().Distinct();
+            Span<Hsv> hsv = new Span<Hsv>(new Hsv[distinct.Count()]);
+            var colors = new ReadOnlySpan<Rgb>(distinct.Select(c => new Rgb(c.R / 255f, c.G / 255f, c.B / 255f)).ToArray());
+            new ColorSpaceConverter().Convert(colors, hsv);
+
+            var reduced = reduceColors(hsv.ToArray());
+            return reduced.Select(c => Color4.FromHsv(new Vector4(c.H / 360, c.S, c.V, 1))).ToArray();
         }
 
         private void getImageGL(Action<Image<Rgba32>> callback)
@@ -108,29 +144,7 @@ namespace MusicVisualizer.Game.UI
                 {
                     image.Mutate(x => x.Resize(64, 64));
 
-                    bool success = image.TryGetSinglePixelSpan(out var span);
-                    Debug.Assert(success);
-
-                    var distinct = span.ToArray().Distinct();
-                    Span<Hsv> hsv = new Span<Hsv>(new Hsv[distinct.Count()]);
-                    var colors = new ReadOnlySpan<Rgb>(distinct.Select(c => new Rgb(c.R / 255f, c.G / 255f, c.B / 255f)).ToArray());
-                    new ColorSpaceConverter().Convert(colors, hsv);
-
-                    var searched = new List<Hsv>();
-                    var result = new List<Hsv>();
-
-                    foreach (var color in hsv)
-                    {
-                        if (searched.Contains(color)) continue;
-
-                        var sim = getSimilarColors(color, hsv.ToArray());
-
-                        result.Add(sim.Any() ? avgHsv(sim) : color);
-
-                        searched.AddRange(sim);
-                    }
-
-                    callback(result.Select(c => Color4.FromHsv(new Vector4(c.H / 360, c.S, c.V, 1))).ToArray());
+                    callback(getImageColors(image));
                 });
             });
         }
@@ -159,32 +173,9 @@ namespace MusicVisualizer.Game.UI
 
                 stream.Seek(0, SeekOrigin.Begin);
 
-                using (Image<Rgb24> image = SixLabors.ImageSharp.Image.Load<Rgb24>(stream))
-                {
-                    var success = image.TryGetSinglePixelSpan(out var span);
-                    Debug.Assert(success);
+                using Image<Rgb24> image = SixLabors.ImageSharp.Image.Load<Rgb24>(stream);
 
-                    var distinct = span.ToArray().Distinct();
-                    Span<Hsv> hsv = new Span<Hsv>(new Hsv[distinct.Count()]);
-                    var colors = new ReadOnlySpan<Rgb>(distinct.Select(c => new Rgb(c.R / 255f, c.G / 255f, c.B / 255f)).ToArray());
-                    new ColorSpaceConverter().Convert(colors, hsv);
-
-                    var searched = new List<Hsv>();
-                    var result = new List<Hsv>();
-
-                    foreach (var color in hsv)
-                    {
-                        if (searched.Contains(color)) continue;
-
-                        var sim = getSimilarColors(color, hsv.ToArray());
-
-                        result.Add(sim.Any() ? avgHsv(sim) : color);
-
-                        searched.AddRange(sim);
-                    }
-
-                    callback(result.Select(c => Color4.FromHsv(new Vector4(c.H / 360, c.S, c.V, 1))).ToArray());
-                }
+                callback(getImageColors(image));
             });
         }
 
