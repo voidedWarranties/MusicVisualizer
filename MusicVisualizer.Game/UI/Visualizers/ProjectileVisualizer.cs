@@ -4,6 +4,7 @@ using System.Linq;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
+using osu.Framework.Graphics.Pooling;
 using osu.Framework.Graphics.Shapes;
 using osuTK;
 using osuTK.Graphics;
@@ -27,17 +28,28 @@ namespace MusicVisualizer.Game.UI.Visualizers
 
         private readonly List<Projectile> projectiles = new List<Projectile>();
 
+        private readonly DrawablePool<Projectile> projectilePool = new DrawablePool<Projectile>(5000);
+
+        public ProjectileVisualizer()
+        {
+            Add(projectilePool);
+        }
+
         private void createSprite(Vector2 pos, Vector2 direction, float velocity, Color4 color, float gravity = 0)
         {
-            var circle = new Projectile
+            var circle = projectilePool.Get(c =>
             {
-                Position = pos,
-                Direction = direction,
-                Velocity = velocity,
-                Gravity = gravity,
-                Colour = color,
-                Size = new Vector2(12)
-            };
+                c.ClearTransforms();
+                c.Alpha = 1;
+                c.IsRemoving = false;
+
+                c.Position = pos;
+                c.Direction = direction;
+                c.Velocity = velocity;
+                c.Gravity = gravity;
+                c.Colour = color;
+                c.Size = new Vector2(12);
+            });
 
             Add(circle);
             projectiles.Add(circle);
@@ -72,7 +84,7 @@ namespace MusicVisualizer.Game.UI.Visualizers
 
                 foreach (var angle in angles)
                 {
-                    var velocity = ((100 * (avg / 0.2f)) + 5) / 2;
+                    var velocity = (100 * (avg / 0.2f) + 5) / 2;
                     createSprite(origin, angle, velocity, color);
                 }
             }
@@ -106,7 +118,11 @@ namespace MusicVisualizer.Game.UI.Visualizers
 
                 if (p.Velocity < 5 && !p.IsRemoving)
                 {
-                    p.FadeOut(750, Easing.OutQuad).Expire();
+                    p.FadeOut(750, Easing.OutQuad).OnComplete(proj =>
+                    {
+                        proj.Expire();
+                        projectiles.Remove(proj);
+                    });
 
                     p.IsRemoving = true;
                 }
@@ -132,7 +148,7 @@ namespace MusicVisualizer.Game.UI.Visualizers
             var points = getPolygonPoints(sides).ToArray();
 
             var sideLen = Vector2Extensions.Distance(points[0], points[1]);
-            var space = sideLen / ((float)projectiles / sides);
+            var space = sideLen / (int)(projectiles / sides);
 
             for (var i = 0; i < points.Length; i++)
             {
@@ -158,7 +174,7 @@ namespace MusicVisualizer.Game.UI.Visualizers
             return angles;
         }
 
-        private class Projectile : Circle
+        private class Projectile : PoolableDrawable
         {
             public Vector2 Direction { get; set; }
 
@@ -167,6 +183,14 @@ namespace MusicVisualizer.Game.UI.Visualizers
             public float Gravity { get; set; }
 
             public bool IsRemoving { get; set; }
+
+            public Projectile()
+            {
+                AddInternal(new Circle
+                {
+                    RelativeSizeAxes = Axes.Both
+                });
+            }
         }
     }
 }
