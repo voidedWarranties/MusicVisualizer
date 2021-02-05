@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using MusicVisualizer.Game.IO;
 using MusicVisualizer.Game.UI;
 using MusicVisualizer.Game.UI.Visualizers;
@@ -8,6 +9,7 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Shapes;
 using osu.Framework.Screens;
 using osuTK.Graphics;
+using YoutubeExplode;
 
 namespace MusicVisualizer.Game
 {
@@ -17,7 +19,8 @@ namespace MusicVisualizer.Game
 
         private BackgroundVideo backgroundVideo;
 
-        private readonly Bindable<SongConfig> config = new Bindable<SongConfig>();
+        [Resolved]
+        private YoutubeClient youtube { get; set; }
 
         private readonly Bindable<Track> track = new Bindable<Track>();
 
@@ -37,7 +40,6 @@ namespace MusicVisualizer.Game
 
             dependencies.Cache(backgroundVideo = new BackgroundVideo
             {
-                Config = { BindTarget = config },
                 Track = { BindTarget = track }
             });
 
@@ -89,18 +91,25 @@ namespace MusicVisualizer.Game
                         else
                             t.Start();
                     },
-                    PlayFile = file =>
+                    PlayYoutube = async id =>
                     {
-                        config.Value = file;
-                        config.TriggerChange();
+                        var (videoPath, audioPath) = await store.GetYoutubeFiles(id);
 
-                        track.Value = tracks.Get(file.Audio);
+                        track.Value = await tracks.GetAsync(audioPath);
                         track.Value.Start();
+
+                        Schedule(() =>
+                        {
+                            backgroundVideo.Play(videoPath);
+                        });
                     }
                 }
             };
 
-            songMenu.UpdateItems(store.GetInis());
+            Task.Run(async () =>
+            {
+                await songMenu.SetPlaylist("PLwBnYkSZTLgIGr1_6l5pesUY0TZZFIy_b");
+            });
         }
     }
 }

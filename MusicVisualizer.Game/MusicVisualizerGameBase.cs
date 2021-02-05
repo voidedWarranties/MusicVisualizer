@@ -8,6 +8,7 @@ using osu.Framework.Graphics.Containers;
 using osu.Framework.IO.Stores;
 using osu.Framework.Platform;
 using osuTK;
+using YoutubeExplode;
 
 namespace MusicVisualizer.Game
 {
@@ -26,6 +27,8 @@ namespace MusicVisualizer.Game
 
         protected FileStore Store { get; private set; }
 
+        protected YoutubeClient Youtube { get; private set; }
+
         protected MusicVisualizerGameBase()
         {
             Name = "MusicVisualizer";
@@ -43,7 +46,9 @@ namespace MusicVisualizer.Game
         {
             Resources.AddStore(new DllResourceStore(typeof(MusicVisualizerResources).Assembly));
 
-            dependencies.Cache(Store = new FileStore(storage));
+            dependencies.CacheAs(Youtube = new YoutubeClient());
+
+            dependencies.Cache(Store = new FileStore(storage, Youtube));
 
             dependencies.CacheAs(Audio.GetTrackStore(Store.Store));
 

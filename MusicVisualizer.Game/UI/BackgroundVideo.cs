@@ -10,7 +10,6 @@ using osu.Framework.Audio.Track;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
-using osu.Framework.Graphics.Shapes;
 using osu.Framework.Graphics.Video;
 using osu.Framework.Logging;
 using osuTK;
@@ -40,8 +39,6 @@ namespace MusicVisualizer.Game.UI
         private VisualizerContainer vis { get; set; }
 
         public Bindable<Track> Track = new Bindable<Track>();
-
-        public Bindable<SongConfig> Config = new Bindable<SongConfig>();
 
         public Bindable<ColorInfo> Colors = new Bindable<ColorInfo>();
 
@@ -240,39 +237,27 @@ namespace MusicVisualizer.Game.UI
             }
         }
 
+        public void Play(string path)
+        {
+            videoFile = path;
+
+            InternalChild = video = new Video(store.Store.GetStream(path))
+            {
+                RelativeSizeAxes = Axes.Both,
+                FillMode = FillMode.Fill,
+                Anchor = Anchor.Centre,
+                Origin = Anchor.Centre,
+                Clock = new FramedClock(clock = new StopwatchClock())
+            };
+
+            UpdateColors(true);
+        }
+
         [BackgroundDependencyLoader]
         private void load(FileStore store, GameHost host)
         {
             this.host = host;
             this.store = store;
-
-            Config.ValueChanged += ev =>
-            {
-                videoFile = ev.NewValue.Video;
-
-                if (videoFile != null)
-                {
-                    var stream = store.Store.GetStream(videoFile);
-                    InternalChild = video = new Video(stream)
-                    {
-                        RelativeSizeAxes = Axes.Both,
-                        FillMode = FillMode.Fill,
-                        Anchor = Anchor.Centre,
-                        Origin = Anchor.Centre,
-                        Clock = new FramedClock(clock = new StopwatchClock())
-                    };
-
-                    UpdateColors(true);
-                }
-                else
-                {
-                    InternalChild = new Box
-                    {
-                        Colour = Color4.Black,
-                        RelativeSizeAxes = Axes.Both
-                    };
-                }
-            };
         }
 
         public class ColorInfo

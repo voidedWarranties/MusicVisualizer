@@ -1,21 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using MusicVisualizer.Game.IO;
 using osu.Framework.Allocation;
-using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Graphics.UserInterface;
 using osu.Framework.Platform;
+using YoutubeExplode;
 
 namespace MusicVisualizer.Game.UI
 {
     public class SongMenu : Menu
     {
+        [Resolved]
+        private YoutubeClient youtube { get; set; }
+
         public Action PlayPause { get; set; }
 
-        public Action<SongConfig> PlayFile;
+        public Action<string> PlayYoutube;
 
         private List<MenuItem> songSubmenuItems;
 
@@ -39,13 +43,14 @@ namespace MusicVisualizer.Game.UI
             };
         }
 
-        public void UpdateItems(IEnumerable<SongConfig> files)
+        public async Task SetPlaylist(string id)
         {
             songSubmenuItems.Clear();
-            files.ForEach(file =>
+
+            await foreach (var video in youtube.Playlists.GetVideosAsync(id))
             {
-                songSubmenuItems.Add(new MenuItem(file.Name, () => PlayFile?.Invoke(file)));
-            });
+                songSubmenuItems.Add(new MenuItem(video.Title, () => PlayYoutube?.Invoke(video.Id)));
+            }
         }
 
         protected override DrawableMenuItem CreateDrawableMenuItem(MenuItem item) => new SongMenuItem(item);
