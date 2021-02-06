@@ -161,7 +161,7 @@ namespace MusicVisualizer.Game.UI
 
                 FFMpegArguments
                     .FromFileInput(path, true, opt =>
-                        opt.Seek(new TimeSpan(0, 0, 0, 0, time)))
+                        opt.Seek(TimeSpan.FromMilliseconds(time)))
                     .OutputToPipe(sink, opt =>
                         opt.WithFrameOutputCount(1)
                            .WithArgument(new CustomArgument("-s 16x16"))
