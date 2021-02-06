@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using MusicVisualizer.Game.IO;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
@@ -17,11 +15,11 @@ namespace MusicVisualizer.Game.UI
         [Resolved]
         private YoutubeClient youtube { get; set; }
 
-        public Action PlayPause { get; set; }
+        public Action PlayPause;
 
-        public Action<string> PlayYoutube;
+        public Action OpenPlaylist;
 
-        private List<MenuItem> songSubmenuItems;
+        public Action ClosePlaylist;
 
         public SongMenu(Direction direction, bool topLevelMenu = true)
             : base(direction, topLevelMenu)
@@ -36,21 +34,9 @@ namespace MusicVisualizer.Game.UI
             {
                 new MenuItem("Open Folder", () => host.OpenFileExternally(store.Storage.GetFullPath("."))),
                 new MenuItem("Play/Pause", PlayPause),
-                new MenuItem("Songs")
-                {
-                    Items = songSubmenuItems = new List<MenuItem>()
-                }
+                new MenuItem("Open Playlist", OpenPlaylist),
+                new MenuItem("Close Playlist", ClosePlaylist)
             };
-        }
-
-        public async Task SetPlaylist(string id)
-        {
-            songSubmenuItems.Clear();
-
-            await foreach (var video in youtube.Playlists.GetVideosAsync(id))
-            {
-                songSubmenuItems.Add(new MenuItem(video.Title, () => PlayYoutube?.Invoke(video.Id)));
-            }
         }
 
         protected override DrawableMenuItem CreateDrawableMenuItem(MenuItem item) => new SongMenuItem(item);

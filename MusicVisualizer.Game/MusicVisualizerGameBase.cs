@@ -5,6 +5,7 @@ using osu.Framework.Audio;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
+using osu.Framework.Graphics.Textures;
 using osu.Framework.IO.Stores;
 using osu.Framework.Platform;
 using osuTK;
@@ -53,6 +54,8 @@ namespace MusicVisualizer.Game
             dependencies.Cache(Store = new FileStore(storage, Youtube));
 
             dependencies.CacheAs(Audio.GetTrackStore(Store.Store));
+
+            dependencies.Cache(new LargeTextureStore(Host.CreateTextureLoaderStore(new OnlineStore())));
 
             Audio.Tracks.AddAdjustment(AdjustableProperty.Volume, new BindableDouble(0.25));
         }
