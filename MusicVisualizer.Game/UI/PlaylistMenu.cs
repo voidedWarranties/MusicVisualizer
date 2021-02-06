@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MusicVisualizer.Game.IO;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
@@ -14,13 +15,17 @@ namespace MusicVisualizer.Game.UI
         [Resolved]
         private YoutubeClient youtube { get; set; }
 
+        [Resolved(canBeNull: true)]
+        private VisConfigManager config { get; set; }
+
         private const int width = 430;
 
-        private readonly FillFlowContainer itemFlow;
+        private FillFlowContainer itemFlow;
 
         public Action<string> PlayYoutube;
 
-        public PlaylistMenu()
+        [BackgroundDependencyLoader]
+        private void load()
         {
             Width = width;
             Anchor = Anchor.TopRight;
@@ -49,6 +54,16 @@ namespace MusicVisualizer.Game.UI
                     }
                 }
             };
+
+            if (config != null)
+            {
+                config.GetBindable<string>(VisSetting.Playlist).ValueChanged += e =>
+                {
+                    SetPlaylist(e.NewValue);
+                };
+
+                SetPlaylist(config.Get<string>(VisSetting.Playlist));
+            }
         }
 
         protected override void PopIn() => this.MoveToX(0, 300, Easing.OutExpo);

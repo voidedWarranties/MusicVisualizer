@@ -30,6 +30,8 @@ namespace MusicVisualizer.Game
 
         protected YoutubeClient Youtube { get; private set; }
 
+        protected VisConfigManager LocalConfig { get; private set; }
+
         protected MusicVisualizerGameBase()
         {
             Name = "MusicVisualizer";
@@ -57,7 +59,16 @@ namespace MusicVisualizer.Game
 
             dependencies.Cache(new LargeTextureStore(Host.CreateTextureLoaderStore(new OnlineStore())));
 
+            dependencies.Cache(LocalConfig = new VisConfigManager(storage));
+
             Audio.Tracks.AddAdjustment(AdjustableProperty.Volume, new BindableDouble(0.25));
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            base.Dispose(isDisposing);
+
+            LocalConfig.Dispose();
         }
     }
 }

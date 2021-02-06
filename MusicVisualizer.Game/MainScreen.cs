@@ -121,8 +121,6 @@ namespace MusicVisualizer.Game
                     ClosePlaylist = menu.Hide
                 }
             };
-
-            menu.SetPlaylist("PLwBnYkSZTLgIGr1_6l5pesUY0TZZFIy_b");
         }
     }
 }
