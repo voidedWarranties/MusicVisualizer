@@ -55,7 +55,7 @@ namespace MusicVisualizer.Game.UI
 
         protected override void PopOut() => this.MoveToX(1, 300, Easing.InQuint);
 
-        public void SetPlaylist(string id) => Schedule(() =>
+        public void SetPlaylist(string id)
         {
             itemFlow.Clear();
 
@@ -65,16 +65,17 @@ namespace MusicVisualizer.Game.UI
 
                 foreach (var video in videos)
                 {
-                    var item = new PlaylistMenuItem(video)
+                    Schedule(() =>
                     {
-                        Anchor = Anchor.TopCentre,
-                        Origin = Anchor.TopCentre,
-                        Action = () => PlayYoutube?.Invoke(video.Id)
-                    };
-
-                    _ = LoadComponentAsync(item, itemFlow.Add);
+                        itemFlow.Add(new PlaylistMenuItem(video)
+                        {
+                            Anchor = Anchor.TopCentre,
+                            Origin = Anchor.TopCentre,
+                            Action = () => PlayYoutube?.Invoke(video.Id)
+                        });
+                    });
                 }
             });
-        });
+        }
     }
 }
