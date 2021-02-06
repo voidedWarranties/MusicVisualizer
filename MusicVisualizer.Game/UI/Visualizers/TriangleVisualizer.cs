@@ -86,9 +86,9 @@ namespace MusicVisualizer.Game.UI.Visualizers
 
             float clockFactor = (float)Clock.ElapsedFrameTime / (1000 / 60f);
 
-            velocity = Math.Max(velocity, Math.Min(vis.Activity * 3, 15));
+            velocity = Math.Max(velocity, Math.Min(vis.Activity * 2.5f, 12));
 
-            velocity -= velocity * 0.05f * clockFactor;
+            velocity -= velocity * 0.06f * clockFactor;
 
             float num = (float)((base_velocity + velocity) * clockFactor * 0.5);
 

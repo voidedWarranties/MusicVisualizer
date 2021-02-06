@@ -45,9 +45,17 @@ namespace MusicVisualizer.Game.UI.Visualizers
                 SmoothedAmplitudes[i] = smoothing * prevAmplitudes[i] + (1 - smoothing) * TemporalAmplitudes[i];
 
             Activity = 0.0f;
-            const int end = 64;
+            const int end = ChannelAmplitudes.AMPLITUDES_SIZE / 4;
             for (int i = 0; i < end; i++)
                 Activity += 2f * TemporalAmplitudes[i] * (end - i) / end;
+
+            const int high_end = ChannelAmplitudes.AMPLITUDES_SIZE / 2;
+
+            for (int i = 0; i < high_end; i++)
+            {
+                var ampIdx = ChannelAmplitudes.AMPLITUDES_SIZE - i - 1;
+                Activity += 3 * TemporalAmplitudes[ampIdx] * (high_end - i) / high_end;
+            }
 
             activeHistory.Add(Activity);
             if (activeHistory.Count > 16) activeHistory.RemoveAt(0);
