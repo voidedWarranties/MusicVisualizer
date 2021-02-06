@@ -28,6 +28,7 @@ namespace MusicVisualizer.Game
         private void load(ITrackStore tracks, FileStore store)
         {
             PlaylistMenu menu;
+            ProgressOverlay progress;
 
             track.ValueChanged += ev =>
             {
@@ -67,12 +68,29 @@ namespace MusicVisualizer.Game
                             Anchor = Anchor.Centre,
                             Origin = Anchor.Centre
                         },
+                        progress = new ProgressOverlay(),
                         menu = new PlaylistMenu
                         {
                             RelativeSizeAxes = Axes.Y,
                             PlayYoutube = async id =>
                             {
-                                var (videoPath, audioPath) = await store.GetYoutubeFiles(id);
+                                ProgressOverlay.ProgressBar progressVideo = null, progressAudio = null;
+
+                                var (videoPath, audioPath) = await store.GetYoutubeFiles(id, d =>
+                                {
+                                    Schedule(() =>
+                                    {
+                                        progressVideo ??= progress.AddItem($"{id} - Video");
+                                        progressVideo.Progress = d;
+                                    });
+                                }, d =>
+                                {
+                                    Schedule(() =>
+                                    {
+                                        progressAudio ??= progress.AddItem($"{id} - Audio");
+                                        progressAudio.Progress = d;
+                                    });
+                                });
 
                                 track.Value = await tracks.GetAsync(audioPath);
                                 track.Value.Start();

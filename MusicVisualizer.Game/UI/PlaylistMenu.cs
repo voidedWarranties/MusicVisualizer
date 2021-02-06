@@ -37,7 +37,7 @@ namespace MusicVisualizer.Game.UI
                     Colour = Colour4.DarkGray.Darken(2),
                     Depth = int.MaxValue
                 },
-                new PlaylistScrollContainer
+                new VisScrollContainer
                 {
                     RelativeSizeAxes = Axes.Both,
                     Child = itemFlow = new FillFlowContainer
@@ -76,38 +76,5 @@ namespace MusicVisualizer.Game.UI
                 }
             });
         });
-
-        private class PlaylistScrollContainer : ScrollContainer<Drawable>
-        {
-            protected override ScrollbarContainer CreateScrollbar(Direction direction) =>
-                new PlaylistScrollbar(direction);
-
-            private class PlaylistScrollbar : ScrollbarContainer
-            {
-                private const float dim_size = 8;
-
-                public PlaylistScrollbar(Direction direction)
-                    : base(direction)
-                {
-                    Masking = true;
-                    CornerRadius = dim_size / 2;
-
-                    Child = new Box
-                    {
-                        RelativeSizeAxes = Axes.Both,
-                        Colour = Colour4.Gray
-                    };
-                }
-
-                public override void ResizeTo(float val, int duration = 0, Easing easing = Easing.None)
-                {
-                    Vector2 size = new Vector2(dim_size)
-                    {
-                        [(int)ScrollDirection] = val
-                    };
-                    this.ResizeTo(size, duration, easing);
-                }
-            }
-        }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using FFMpegCore;
 using osu.Framework.IO.Stores;
@@ -27,7 +27,7 @@ namespace MusicVisualizer.Game.IO
             this.youtube = youtube;
         }
 
-        public async Task<(string, string)> GetYoutubeFiles(string id)
+        public async Task<(string, string)> GetYoutubeFiles(string id, Action<double> videoProgress = null, Action<double> audioProgress = null)
         {
             var audioPath = $"{id}/audio.mp3";
             var videoPath = $"{id}/video.webm";
@@ -48,7 +48,7 @@ namespace MusicVisualizer.Game.IO
                 {
                     Logger.Log($"Downloading {videoPath}");
 
-                    var progress = new Progress<double>(d => Logger.Log(d.ToString(CultureInfo.CurrentCulture)));
+                    var progress = new Progress<double>(videoProgress ?? (d => { }));
 
                     tasks.Add(youtube.Videos.Streams.DownloadAsync(videoStreamInfo, Storage.GetFullPath(videoPath, true), progress));
                 }
@@ -57,9 +57,27 @@ namespace MusicVisualizer.Game.IO
                 {
                     Logger.Log($"Downloading {audioPath}");
 
+                    TimeSpan? length = null;
+
                     tasks.Add(FFMpegArguments.FromUrlInput(new Uri(audioStreamInfo.Url))
                                              .OutputToFile(Storage.GetFullPath(audioPath, true))
-                                             .NotifyOnProgress(time => Logger.Log(time.ToString()))
+                                             .NotifyOnProgress(time =>
+                                             {
+                                                 Trace.Assert(length.HasValue);
+
+                                                 audioProgress?.Invoke(time.TotalMilliseconds / length.Value.TotalMilliseconds);
+                                             })
+                                             .NotifyOnOutput((l, _) =>
+                                             {
+                                                 l = l.Trim();
+                                                 const string token = "Duration: ";
+
+                                                 if (!l.StartsWith(token)) return;
+
+                                                 var timeStr = l.Substring(token.Length).Split(", ")[0];
+
+                                                 length = TimeSpan.Parse(timeStr);
+                                             })
                                              .ProcessAsynchronously());
                 }
 
