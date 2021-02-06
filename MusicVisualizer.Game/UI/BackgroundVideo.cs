@@ -244,7 +244,7 @@ namespace MusicVisualizer.Game.UI
             InternalChild = video = new Video(store.Store.GetStream(path))
             {
                 RelativeSizeAxes = Axes.Both,
-                FillMode = FillMode.Fill,
+                FillMode = FillMode.Fit,
                 Anchor = Anchor.Centre,
                 Origin = Anchor.Centre,
                 Clock = new FramedClock(clock = new StopwatchClock())
