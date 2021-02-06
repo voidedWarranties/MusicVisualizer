@@ -55,7 +55,7 @@ namespace MusicVisualizer.Game.UI
 
         protected override void PopOut() => this.MoveToX(1, 300, Easing.InQuint);
 
-        public void SetPlaylist(string id)
+        public void SetPlaylist(string id) => Schedule(() =>
         {
             itemFlow.Clear();
 
@@ -76,6 +76,6 @@ namespace MusicVisualizer.Game.UI
                     });
                 }
             });
-        }
+        });
     }
 }
