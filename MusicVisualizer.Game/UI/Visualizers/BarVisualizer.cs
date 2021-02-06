@@ -14,9 +14,9 @@ namespace MusicVisualizer.Game.UI.Visualizers
         [Resolved]
         private VisualizerContainer vis { get; set; }
 
-        protected override DrawNode CreateDrawNode() => new DebugVisualizerDrawNode(this);
+        protected override DrawNode CreateDrawNode() => new BarVisualizerDrawNode(this);
 
-        private class DebugVisualizerDrawNode : DrawNode
+        private class BarVisualizerDrawNode : DrawNode
         {
             protected new BarVisualizer Source => (BarVisualizer)base.Source;
 
@@ -24,7 +24,7 @@ namespace MusicVisualizer.Game.UI.Visualizers
 
             private Vector2 size;
 
-            public DebugVisualizerDrawNode(IDrawable source)
+            public BarVisualizerDrawNode(IDrawable source)
                 : base(source)
             {
             }
