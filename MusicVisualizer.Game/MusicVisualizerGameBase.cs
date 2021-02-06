@@ -46,6 +46,8 @@ namespace MusicVisualizer.Game
         {
             Resources.AddStore(new DllResourceStore(typeof(MusicVisualizerResources).Assembly));
 
+            AddFont(Resources, @"Fonts/Noto-Sans-CJK-JP");
+
             dependencies.CacheAs(Youtube = new YoutubeClient());
 
             dependencies.Cache(Store = new FileStore(storage, Youtube));
