@@ -97,7 +97,7 @@ namespace MusicVisualizer.Game.UI.Visualizers
                 var triangle = triangles[i];
                 float scaleFactor = triangle.DrawWidth / 700;
                 triangle.Y -= (float)(num * (0.2 + 8 * scaleFactor));
-                if (triangle.Y < -triangle.DrawHeight)
+                if (triangle.Y < -triangle.DrawHeight || triangle.Y > DrawHeight + 1.5f * triangle.DrawHeight) // reset if way below or above the screen
                     resetTriangle(triangle);
             }
 
