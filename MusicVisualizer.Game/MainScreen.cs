@@ -31,8 +31,6 @@ namespace MusicVisualizer.Game
         protected override IReadOnlyDependencyContainer CreateChildDependencies(IReadOnlyDependencyContainer parent)
             => dependencies = new DependencyContainer(base.CreateChildDependencies(parent));
 
-        private ProgressOverlay progress;
-
         [BackgroundDependencyLoader]
         private void load()
         {
@@ -53,9 +51,11 @@ namespace MusicVisualizer.Game
             dependencies.Cache(queue = new QueueManager
             {
                 Track = { BindTarget = track },
-                Video = { BindTarget = video },
-                PlayYoutube = playVideo
+                Video = { BindTarget = video }
             });
+
+            ProgressOverlay progress;
+            dependencies.Cache(progress = new ProgressOverlay());
 
             InternalChildren = new Drawable[]
             {
@@ -85,11 +85,10 @@ namespace MusicVisualizer.Game
                             Anchor = Anchor.Centre,
                             Origin = Anchor.Centre
                         },
-                        progress = new ProgressOverlay(),
+                        progress,
                         menu = new PlaylistMenu
                         {
-                            RelativeSizeAxes = Axes.Y,
-                            PlayYoutube = playVideo
+                            RelativeSizeAxes = Axes.Y
                         }
                     }
                 },
@@ -111,37 +110,6 @@ namespace MusicVisualizer.Game
                     ClosePlaylist = menu.Hide
                 }
             };
-        }
-
-        private async void playVideo(string id)
-        {
-            ProgressOverlay.ProgressBar progressVideo = null, progressAudio = null;
-
-            var (videoPath, audioPath) = await store.GetYoutubeFiles(id, d =>
-            {
-                Schedule(() =>
-                {
-                    progressVideo ??= progress.AddItem($"{id} - Video");
-                    progressVideo.Progress = d;
-                });
-            }, d =>
-            {
-                Schedule(() =>
-                {
-                    progressAudio ??= progress.AddItem($"{id} - Audio");
-                    progressAudio.Progress = d;
-                });
-            });
-
-            video.Value = id;
-
-            track.Value = await tracks.GetAsync(audioPath);
-            track.Value.Start();
-
-            Schedule(() =>
-            {
-                backgroundVideo.Play(videoPath);
-            });
         }
     }
 }

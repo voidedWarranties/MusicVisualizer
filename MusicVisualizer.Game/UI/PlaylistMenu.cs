@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using MusicVisualizer.Game.IO;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
@@ -24,8 +23,6 @@ namespace MusicVisualizer.Game.UI
         private const int width = 430;
 
         private FillFlowContainer itemFlow;
-
-        public Action<string> PlayYoutube;
 
         [BackgroundDependencyLoader]
         private void load()
@@ -90,7 +87,7 @@ namespace MusicVisualizer.Game.UI
                         {
                             Anchor = Anchor.TopCentre,
                             Origin = Anchor.TopCentre,
-                            Action = () => PlayYoutube?.Invoke(video.Id)
+                            Action = () => queue?.PlayVideo(video.Id)
                         });
                     });
                 }
