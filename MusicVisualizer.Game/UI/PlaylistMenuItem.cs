@@ -6,6 +6,7 @@ using osu.Framework.Graphics.Sprites;
 using osu.Framework.Graphics.Textures;
 using osu.Framework.Graphics.UserInterface;
 using osuTK;
+using YoutubeExplode.Playlists;
 using YoutubeExplode.Videos;
 
 namespace MusicVisualizer.Game.UI
@@ -21,11 +22,22 @@ namespace MusicVisualizer.Game.UI
 
         private Container thumbnailContainer;
 
-        private readonly Video video;
+        private readonly string title;
+        private readonly string author;
+        private readonly string thumbnailUrl;
 
         public PlaylistMenuItem(Video video)
         {
-            this.video = video;
+            title = video.Title;
+            author = video.Author;
+            thumbnailUrl = video.Thumbnails.MediumResUrl;
+        }
+
+        public PlaylistMenuItem(PlaylistVideo video)
+        {
+            title = video.Title;
+            author = video.Author;
+            thumbnailUrl = video.Thumbnails.MediumResUrl;
         }
 
         [BackgroundDependencyLoader]
@@ -64,14 +76,14 @@ namespace MusicVisualizer.Game.UI
                             Font = FrameworkFont.Regular.With(size: 0.55f * height / 2),
                             RelativeSizeAxes = Axes.X,
                             Truncate = true,
-                            Text = video.Title
+                            Text = title
                         },
                         new SpriteText
                         {
                             Font = FrameworkFont.Regular.With(size: 0.45f * height / 2),
                             RelativeSizeAxes = Axes.X,
                             Truncate = true,
-                            Text = video.Author
+                            Text = author
                         }
                     }
                 }
@@ -79,7 +91,7 @@ namespace MusicVisualizer.Game.UI
 
             thumbnailContainer.Add(new DelayedLoadUnloadWrapper(() =>
             {
-                var thumbnail = new Thumbnail(video)
+                var thumbnail = new Thumbnail(thumbnailUrl)
                 {
                     Anchor = Anchor.Centre,
                     Origin = Anchor.Centre,
@@ -99,17 +111,17 @@ namespace MusicVisualizer.Game.UI
         [LongRunningLoad]
         private class Thumbnail : Sprite
         {
-            private readonly Video video;
+            private readonly string url;
 
-            public Thumbnail(Video video)
+            public Thumbnail(string url)
             {
-                this.video = video;
+                this.url = url;
             }
 
             [BackgroundDependencyLoader]
             private void load(LargeTextureStore textures)
             {
-                Texture = textures.Get(video.Thumbnails.MediumResUrl);
+                Texture = textures.Get(url);
                 Scale = new Vector2((float)thumbnail_width / Texture.Width);
             }
         }
