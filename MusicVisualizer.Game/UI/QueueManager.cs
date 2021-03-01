@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using MusicVisualizer.Game.IO;
 using osu.Framework.Allocation;
 using osu.Framework.Audio.Track;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
+using YoutubeExplode;
 using YoutubeExplode.Playlists;
 
 namespace MusicVisualizer.Game.UI
@@ -11,16 +13,25 @@ namespace MusicVisualizer.Game.UI
     public class QueueManager : Component
     {
         [Resolved]
+        private YoutubeClient youtube { get; set; }
+
+        [Resolved]
         private FileStore store { get; set; }
 
         [Resolved]
         private ITrackStore tracks { get; set; }
 
-        [Resolved]
+        [Resolved(canBeNull: true)]
         private BackgroundVideo backgroundVideo { get; set; }
 
-        [Resolved]
+        [Resolved(canBeNull: true)]
         private ProgressOverlay progress { get; set; }
+
+        [Resolved]
+        private PlaylistMenu playlistMenu { get; set; }
+
+        [Resolved(canBeNull: true)]
+        private VisConfigManager config { get; set; }
 
         public readonly Bindable<Track> Track = new Bindable<Track>();
         public readonly Bindable<string> Video = new Bindable<string>();
@@ -30,10 +41,29 @@ namespace MusicVisualizer.Game.UI
         private bool shouldBePlaying;
         private int playingIndex;
 
-        public void SetPlaylist(IEnumerable<PlaylistVideo> videos)
+        protected override void LoadComplete()
         {
-            playlist.Clear();
-            playlist.AddRange(videos);
+            base.LoadComplete();
+
+            if (config == null) return;
+
+            config.GetBindable<string>(VisSetting.Playlist).ValueChanged += e =>
+            {
+                SetPlaylist(e.NewValue);
+            };
+
+            SetPlaylist(config.Get<string>(VisSetting.Playlist));
+        }
+
+        public void TogglePause()
+        {
+            var t = Track.Value;
+            if (t == null) return;
+
+            if (t.IsRunning)
+                t.Stop();
+            else
+                t.Start();
         }
 
         protected override void Update()
@@ -54,6 +84,22 @@ namespace MusicVisualizer.Game.UI
             }
         }
 
+        public void SetPlaylist(string id) => Schedule(() => // schedule due to dependency on youtube
+        {
+            Task.Run(async () =>
+            {
+                var videos = await youtube.Playlists.GetVideosAsync(id);
+
+                playlist.Clear();
+                playlist.AddRange(videos);
+
+                Schedule(() =>
+                {
+                    playlistMenu.SetPlaylist(videos);
+                });
+            });
+        });
+
         public async void PlayVideo(string id)
         {
             shouldBePlaying = false; // prevent infinite loop of downloading every video in case the track does not start immediately
@@ -62,6 +108,8 @@ namespace MusicVisualizer.Game.UI
 
             var (videoPath, audioPath) = await store.GetYoutubeFiles(id, d =>
             {
+                if (progress == null) return;
+
                 Schedule(() =>
                 {
                     progressVideo ??= progress.AddItem($"{id} - Video");
@@ -69,6 +117,8 @@ namespace MusicVisualizer.Game.UI
                 });
             }, d =>
             {
+                if (progress == null) return;
+
                 Schedule(() =>
                 {
                     progressAudio ??= progress.AddItem($"{id} - Audio");
@@ -83,7 +133,7 @@ namespace MusicVisualizer.Game.UI
 
             Schedule(() =>
             {
-                backgroundVideo.Play(videoPath);
+                backgroundVideo?.Play(videoPath);
             });
         }
     }

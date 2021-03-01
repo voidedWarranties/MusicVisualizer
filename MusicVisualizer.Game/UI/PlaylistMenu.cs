@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
-using MusicVisualizer.Game.IO;
+﻿using System.Collections.Generic;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
 using osuTK;
 using YoutubeExplode;
+using YoutubeExplode.Playlists;
 
 namespace MusicVisualizer.Game.UI
 {
@@ -13,9 +13,6 @@ namespace MusicVisualizer.Game.UI
     {
         [Resolved]
         private YoutubeClient youtube { get; set; }
-
-        [Resolved(canBeNull: true)]
-        private VisConfigManager config { get; set; }
 
         [Resolved(canBeNull: true)]
         private QueueManager queue { get; set; }
@@ -54,44 +51,25 @@ namespace MusicVisualizer.Game.UI
                     }
                 }
             };
-
-            if (config != null)
-            {
-                config.GetBindable<string>(VisSetting.Playlist).ValueChanged += e =>
-                {
-                    SetPlaylist(e.NewValue);
-                };
-
-                SetPlaylist(config.Get<string>(VisSetting.Playlist));
-            }
         }
 
         protected override void PopIn() => this.MoveToX(0, 300, Easing.OutExpo);
 
         protected override void PopOut() => this.MoveToX(1, 300, Easing.InQuint);
 
-        public void SetPlaylist(string id) => Schedule(() =>
+        public void SetPlaylist(IEnumerable<PlaylistVideo> videos)
         {
             itemFlow.Clear();
 
-            Task.Run(async () =>
+            foreach (var video in videos)
             {
-                var videos = await youtube.Playlists.GetVideosAsync(id);
-                queue?.SetPlaylist(videos);
-
-                foreach (var video in videos)
+                itemFlow.Add(new PlaylistMenuItem(video)
                 {
-                    Schedule(() =>
-                    {
-                        itemFlow.Add(new PlaylistMenuItem(video)
-                        {
-                            Anchor = Anchor.TopCentre,
-                            Origin = Anchor.TopCentre,
-                            Action = () => queue?.PlayVideo(video.Id)
-                        });
-                    });
-                }
-            });
-        });
+                    Anchor = Anchor.TopCentre,
+                    Origin = Anchor.TopCentre,
+                    Action = () => queue?.PlayVideo(video.Id)
+                });
+            }
+        }
     }
 }

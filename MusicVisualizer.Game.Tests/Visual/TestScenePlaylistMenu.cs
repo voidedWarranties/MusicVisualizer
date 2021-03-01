@@ -1,5 +1,6 @@
 ﻿using MusicVisualizer.Game.UI;
 using NUnit.Framework;
+using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Testing;
 
@@ -7,16 +8,24 @@ namespace MusicVisualizer.Game.Tests.Visual
 {
     public class TestScenePlaylistMenu : TestScene
     {
+        [Cached]
+        private readonly QueueManager queue = new();
+
+        [Cached]
         private readonly PlaylistMenu menu;
 
         public TestScenePlaylistMenu()
         {
-            Add(menu = new PlaylistMenu
+            AddRange(new Drawable[]
             {
-                RelativeSizeAxes = Axes.Y
+                queue,
+                menu = new PlaylistMenu
+                {
+                    RelativeSizeAxes = Axes.Y
+                }
             });
 
-            menu.SetPlaylist("PLwBnYkSZTLgIGr1_6l5pesUY0TZZFIy_b");
+            queue.SetPlaylist("PLwBnYkSZTLgIGr1_6l5pesUY0TZZFIy_b");
         }
 
         [Test]

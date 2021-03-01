@@ -28,7 +28,8 @@ namespace MusicVisualizer.Game
 
         protected FileStore Store { get; private set; }
 
-        protected YoutubeClient Youtube { get; private set; }
+        [Cached]
+        protected readonly YoutubeClient Youtube = new YoutubeClient();
 
         protected VisConfigManager LocalConfig { get; private set; }
 
@@ -50,8 +51,6 @@ namespace MusicVisualizer.Game
             Resources.AddStore(new DllResourceStore(typeof(MusicVisualizerResources).Assembly));
 
             AddFont(Resources, @"Fonts/Noto-Sans-CJK-JP");
-
-            dependencies.CacheAs(Youtube = new YoutubeClient());
 
             dependencies.Cache(Store = new FileStore(storage, Youtube));
 

@@ -34,8 +34,6 @@ namespace MusicVisualizer.Game
         [BackgroundDependencyLoader]
         private void load()
         {
-            PlaylistMenu menu;
-
             track.ValueChanged += ev =>
             {
                 ev.OldValue?.Stop();
@@ -56,6 +54,12 @@ namespace MusicVisualizer.Game
 
             ProgressOverlay progress;
             dependencies.Cache(progress = new ProgressOverlay());
+
+            PlaylistMenu menu;
+            dependencies.Cache(menu = new PlaylistMenu
+            {
+                RelativeSizeAxes = Axes.Y
+            });
 
             InternalChildren = new Drawable[]
             {
@@ -86,26 +90,14 @@ namespace MusicVisualizer.Game
                             Origin = Anchor.Centre
                         },
                         progress,
-                        menu = new PlaylistMenu
-                        {
-                            RelativeSizeAxes = Axes.Y
-                        }
+                        menu
                     }
                 },
                 new SongMenu(Direction.Vertical)
                 {
                     Anchor = Anchor.TopLeft,
                     Origin = Anchor.TopLeft,
-                    PlayPause = () =>
-                    {
-                        var t = track.Value;
-                        if (t == null) return;
-
-                        if (t.IsRunning)
-                            t.Stop();
-                        else
-                            t.Start();
-                    },
+                    PlayPause = queue.TogglePause,
                     OpenPlaylist = menu.Show,
                     ClosePlaylist = menu.Hide
                 }
