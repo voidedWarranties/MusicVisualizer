@@ -73,14 +73,12 @@ namespace MusicVisualizer.Game.UI
             if (Track.Value == null) return;
 
             if (Track.Value.IsRunning && !shouldBePlaying)
-            {
                 shouldBePlaying = true;
-                playingIndex = playlist.FindIndex(i => i.Id == Video.Value);
-            }
             else if (Track.Value.HasCompleted && shouldBePlaying)
             {
-                playingIndex = (playingIndex + 1) % playlist.Count;
-                PlayVideo(playlist[playingIndex].Id);
+                var nextIdx = (playingIndex + 1) % playlist.Count;
+
+                PlayVideo(playlist[nextIdx].Id, nextIdx);
             }
         }
 
@@ -100,9 +98,11 @@ namespace MusicVisualizer.Game.UI
             });
         });
 
-        public async void PlayVideo(string id)
+        public async void PlayVideo(string id, int idx = -1)
         {
             shouldBePlaying = false; // prevent infinite loop of downloading every video in case the track does not start immediately
+
+            playingIndex = idx > 0 ? idx : playlist.FindIndex(i => i.Id == id);
 
             ProgressOverlay.ProgressBar progressVideo = null, progressAudio = null;
 
