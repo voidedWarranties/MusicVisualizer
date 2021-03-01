@@ -18,6 +18,9 @@ namespace MusicVisualizer.Game.UI
         [Resolved(canBeNull: true)]
         private VisConfigManager config { get; set; }
 
+        [Resolved(canBeNull: true)]
+        private QueueManager queue { get; set; }
+
         private const int width = 430;
 
         private FillFlowContainer itemFlow;
@@ -77,6 +80,7 @@ namespace MusicVisualizer.Game.UI
             Task.Run(async () =>
             {
                 var videos = await youtube.Playlists.GetVideosAsync(id);
+                queue?.SetPlaylist(videos);
 
                 foreach (var video in videos)
                 {

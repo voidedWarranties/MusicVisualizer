@@ -17,18 +17,26 @@ namespace MusicVisualizer.Game
         [Resolved]
         private YoutubeClient youtube { get; set; }
 
+        [Resolved]
+        private FileStore store { get; set; }
+
+        [Resolved]
+        private ITrackStore tracks { get; set; }
+
         private readonly Bindable<Track> track = new Bindable<Track>();
+        private readonly Bindable<string> video = new Bindable<string>();
 
         private DependencyContainer dependencies;
 
         protected override IReadOnlyDependencyContainer CreateChildDependencies(IReadOnlyDependencyContainer parent)
             => dependencies = new DependencyContainer(base.CreateChildDependencies(parent));
 
+        private ProgressOverlay progress;
+
         [BackgroundDependencyLoader]
-        private void load(ITrackStore tracks, FileStore store)
+        private void load()
         {
             PlaylistMenu menu;
-            ProgressOverlay progress;
 
             track.ValueChanged += ev =>
             {
@@ -41,8 +49,17 @@ namespace MusicVisualizer.Game
                 Track = { BindTarget = track }
             });
 
+            QueueManager queue;
+            dependencies.Cache(queue = new QueueManager
+            {
+                Track = { BindTarget = track },
+                Video = { BindTarget = video },
+                PlayYoutube = playVideo
+            });
+
             InternalChildren = new Drawable[]
             {
+                queue,
                 new VisualizerContainer
                 {
                     RelativeSizeAxes = Axes.Both,
@@ -72,34 +89,7 @@ namespace MusicVisualizer.Game
                         menu = new PlaylistMenu
                         {
                             RelativeSizeAxes = Axes.Y,
-                            PlayYoutube = async id =>
-                            {
-                                ProgressOverlay.ProgressBar progressVideo = null, progressAudio = null;
-
-                                var (videoPath, audioPath) = await store.GetYoutubeFiles(id, d =>
-                                {
-                                    Schedule(() =>
-                                    {
-                                        progressVideo ??= progress.AddItem($"{id} - Video");
-                                        progressVideo.Progress = d;
-                                    });
-                                }, d =>
-                                {
-                                    Schedule(() =>
-                                    {
-                                        progressAudio ??= progress.AddItem($"{id} - Audio");
-                                        progressAudio.Progress = d;
-                                    });
-                                });
-
-                                track.Value = await tracks.GetAsync(audioPath);
-                                track.Value.Start();
-
-                                Schedule(() =>
-                                {
-                                    backgroundVideo.Play(videoPath);
-                                });
-                            }
+                            PlayYoutube = playVideo
                         }
                     }
                 },
@@ -121,6 +111,37 @@ namespace MusicVisualizer.Game
                     ClosePlaylist = menu.Hide
                 }
             };
+        }
+
+        private async void playVideo(string id)
+        {
+            ProgressOverlay.ProgressBar progressVideo = null, progressAudio = null;
+
+            var (videoPath, audioPath) = await store.GetYoutubeFiles(id, d =>
+            {
+                Schedule(() =>
+                {
+                    progressVideo ??= progress.AddItem($"{id} - Video");
+                    progressVideo.Progress = d;
+                });
+            }, d =>
+            {
+                Schedule(() =>
+                {
+                    progressAudio ??= progress.AddItem($"{id} - Audio");
+                    progressAudio.Progress = d;
+                });
+            });
+
+            video.Value = id;
+
+            track.Value = await tracks.GetAsync(audioPath);
+            track.Value.Start();
+
+            Schedule(() =>
+            {
+                backgroundVideo.Play(videoPath);
+            });
         }
     }
 }
